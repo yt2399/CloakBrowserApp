@@ -3,6 +3,7 @@ import { toast } from 'sonner'
 import { profileApi } from '../request'
 import type { BrowserProfile, ProfileInput, ProfileStatus } from '../types'
 import { startProfilePolling } from './profile-polling'
+import { useI18n, type Language } from '@/i18n'
 
 const PAGE_SIZE = 8
 const PROFILE_STATUS_POLL_INTERVAL_MS = 3000
@@ -23,9 +24,9 @@ const defaultForm: ProfileInput = {
   startUrl: 'https://example.com'
 }
 
-function formatTime(value: number | null): string {
+function formatTime(value: number | null, language: Language = 'zh-CN'): string {
   if (!value) return '-'
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat(language, {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -36,6 +37,7 @@ function formatTime(value: number | null): string {
 export { formatTime }
 
 export function useProfiles() {
+  const { t } = useI18n()
   const [profiles, setProfiles] = useState<BrowserProfile[]>([])
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<'all' | ProfileStatus>('all')
@@ -148,14 +150,14 @@ export function useProfiles() {
 
   const save = async () => {
     if (!formValues.name?.trim()) {
-      setNameError('请输入环境名称')
+      setNameError(t('toast.profileNameRequired'))
       return
     }
     if (!formValues.browserVersion) {
       toast.warning(
         installedBrowserVersions.length
-          ? '请选择浏览器版本'
-          : '未下载任何浏览器内核，请先前往内核下载页面'
+          ? t('toast.browserVersionRequired')
+          : t('toast.noKernelBeforeCreate')
       )
       return
     }
@@ -164,18 +166,18 @@ export function useProfiles() {
     try {
       if (editing) {
         await profileApi.update(editing.id, formValues)
-        toast.success('环境已更新')
+        toast.success(t('toast.profileUpdated'))
       } else {
         await profileApi.create(formValues)
-        toast.success('环境已创建')
+        toast.success(t('toast.profileCreated'))
       }
       setModalOpen(false)
       await refreshProfiles()
     } catch (error) {
       if (!serviceOnline) {
-        toast.warning('当前为设计预览模式，请在 Electron 中保存真实数据')
+        toast.warning(t('toast.previewModeSave'))
       } else {
-        toast.error(error instanceof Error ? error.message : '保存失败')
+        toast.error(error instanceof Error ? error.message : t('toast.saveFailed'))
       }
     } finally {
       setSaving(false)
@@ -187,16 +189,16 @@ export function useProfiles() {
       setProfiles((items) =>
         items.map((item) => (item.id === id ? { ...item, status: 'running' } : item))
       )
-      toast.success('预览模式：环境已标记为运行中')
+      toast.success(t('toast.previewRunning'))
       return
     }
-    const tid = toast.loading('正在打开浏览器环境...')
+    const tid = toast.loading(t('toast.openingProfile'))
     try {
       await profileApi.open(id)
       await refreshProfiles()
-      toast.success('浏览器已打开', { id: tid })
+      toast.success(t('toast.browserOpened'), { id: tid })
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '打开失败', { id: tid })
+      toast.error(error instanceof Error ? error.message : t('toast.openFailed'), { id: tid })
     }
   }
 
@@ -205,12 +207,12 @@ export function useProfiles() {
       setProfiles((items) =>
         items.map((item) => (item.id === id ? { ...item, status: 'stopped' } : item))
       )
-      toast.success('预览模式：环境已标记为已停止')
+      toast.success(t('toast.previewStopped'))
       return
     }
     await profileApi.close(id)
     await refreshProfiles()
-    toast.success('环境已关闭')
+    toast.success(t('toast.profileClosed'))
   }
 
   const requestDelete = (profile: BrowserProfile) => setDeleteTarget(profile)
@@ -228,9 +230,9 @@ export function useProfiles() {
       await profileApi.remove(target.id)
       setSelectedKeys((keys) => keys.filter((id) => id !== target.id))
       await refreshProfiles()
-      toast.success('环境及本地数据已删除')
+      toast.success(t('toast.profileDeleted'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除失败')
+      toast.error(error instanceof Error ? error.message : t('toast.deleteFailed'))
     }
   }
 
@@ -248,7 +250,7 @@ export function useProfiles() {
     if (!serviceOnline) {
       setProfiles((items) => items.filter((item) => !ids.includes(item.id)))
       setSelectedKeys([])
-      toast.success(`已删除 ${ids.length} 个环境`)
+      toast.success(t('toast.deletedProfiles', { count: ids.length }))
       return
     }
 
@@ -256,10 +258,10 @@ export function useProfiles() {
       await profileApi.batchDelete(ids)
       setSelectedKeys([])
       await refreshProfiles()
-      toast.success(`已删除 ${ids.length} 个环境及其本地数据`)
+      toast.success(t('toast.deletedProfilesWithData', { count: ids.length }))
     } catch (error) {
       await refreshProfiles()
-      toast.error(error instanceof Error ? error.message : '批量删除失败')
+      toast.error(error instanceof Error ? error.message : t('toast.batchDeleteFailed'))
     }
   }
 
@@ -271,7 +273,7 @@ export function useProfiles() {
           selectedKeys.includes(item.id) ? { ...item, status } : item
         )
       )
-      toast.success(status === 'running' ? '已批量启动' : '已批量停止')
+      toast.success(status === 'running' ? t('toast.batchStarted') : t('toast.batchStopped'))
       return
     }
     const tasks = selectedKeys.map((id) =>
@@ -279,7 +281,7 @@ export function useProfiles() {
     )
     await Promise.allSettled(tasks)
     await refreshProfiles()
-    toast.success(status === 'running' ? '批量启动完成' : '批量停止完成')
+    toast.success(status === 'running' ? t('toast.batchStartDone') : t('toast.batchStopDone'))
   }
 
   return {

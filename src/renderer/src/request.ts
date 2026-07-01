@@ -1,3 +1,4 @@
+import { I18N_STORAGE_KEY } from './i18n'
 import type {
   ApiResponse,
   BrowserProfile,
@@ -12,6 +13,10 @@ function getBaseUrl(): string {
   return window.appInfo?.apiBaseUrl || fallbackBaseUrl
 }
 
+function requestFailedMessage(): string {
+  return localStorage.getItem(I18N_STORAGE_KEY) === 'en' ? 'Request failed' : '请求失败'
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${getBaseUrl()}${path}`, {
     headers: {
@@ -22,7 +27,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   })
   const body = (await response.json()) as ApiResponse<T>
   if (!response.ok || !body.succeed) {
-    throw new Error(body.msg || '请求失败')
+    throw new Error(body.msg || requestFailedMessage())
   }
   return body.data
 }

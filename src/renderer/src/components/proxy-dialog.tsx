@@ -17,6 +17,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import type { ProxyInput, ProxyProtocol, SavedProxy } from '@/types'
+import { useI18n, type Translate } from '@/i18n'
 
 interface ProxyDialogProps {
   open: boolean
@@ -46,8 +47,8 @@ function Field({
   )
 }
 
-function previewUrl(values: ProxyInput): string {
-  if (!values.host.trim() || !values.port) return '填写主机和端口后自动生成'
+function previewUrl(values: ProxyInput, t: Translate): string {
+  if (!values.host.trim() || !values.port) return t('proxyDialog.previewEmpty')
   const host = values.host.trim().includes(':')
     ? `[${values.host.trim().replace(/^\[|\]$/g, '')}]`
     : values.host.trim()
@@ -67,26 +68,27 @@ export function ProxyDialog({
   formError,
   onSave
 }: ProxyDialogProps) {
+  const { t } = useI18n()
   const update = (patch: Partial<ProxyInput>) => onFormChange({ ...formValues, ...patch })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[620px]">
         <DialogHeader>
-          <DialogTitle>{editing ? '编辑代理' : '新增代理'}</DialogTitle>
+          <DialogTitle>{editing ? t('proxyDialog.editTitle') : t('proxyDialog.createTitle')}</DialogTitle>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-4 py-2">
-          <Field label="代理名称" className="col-span-2">
+          <Field label={t('proxyDialog.name')} className="col-span-2">
             <Input
               autoFocus
-              placeholder="例如：日本住宅代理"
+              placeholder={t('proxyDialog.namePlaceholder')}
               value={formValues.name}
               onChange={(event) => update({ name: event.target.value })}
             />
           </Field>
 
-          <Field label="代理协议">
+          <Field label={t('proxyDialog.protocol')}>
             <Select
               value={formValues.protocol}
               onValueChange={(value) => update({ protocol: value as ProxyProtocol })}
@@ -103,12 +105,12 @@ export function ProxyDialog({
             </Select>
           </Field>
 
-          <Field label="端口">
+          <Field label={t('proxyDialog.port')}>
             <Input
               type="number"
               min={1}
               max={65535}
-              placeholder="例如：1080"
+              placeholder={t('proxyDialog.portPlaceholder')}
               value={formValues.port ?? ''}
               onChange={(event) =>
                 update({ port: event.target.value ? Number(event.target.value) : undefined })
@@ -116,28 +118,28 @@ export function ProxyDialog({
             />
           </Field>
 
-          <Field label="主机 / IP" className="col-span-2">
+          <Field label={t('proxyDialog.host')} className="col-span-2">
             <Input
-              placeholder="例如：proxy.example.com 或 192.168.1.10"
+              placeholder={t('proxyDialog.hostPlaceholder')}
               value={formValues.host}
               onChange={(event) => update({ host: event.target.value })}
             />
           </Field>
 
-          <Field label="用户名（可选）">
+          <Field label={t('proxyDialog.username')}>
             <Input
               autoComplete="off"
-              placeholder="代理账号"
+              placeholder={t('proxyDialog.usernamePlaceholder')}
               value={formValues.username}
               onChange={(event) => update({ username: event.target.value })}
             />
           </Field>
 
-          <Field label="密码（可选）">
+          <Field label={t('proxyDialog.password')}>
             <Input
               type="password"
               autoComplete="new-password"
-              placeholder="代理密码"
+              placeholder={t('proxyDialog.passwordPlaceholder')}
               value={formValues.password}
               onChange={(event) => update({ password: event.target.value })}
             />
@@ -146,10 +148,10 @@ export function ProxyDialog({
           <div className="col-span-2 rounded-lg border bg-muted/40 px-3.5 py-3">
             <div className="mb-1.5 flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <Link2 className="size-3.5" />
-              保存后生成的代理 URL
+              {t('proxyDialog.preview')}
             </div>
             <p className="break-all font-mono text-sm text-foreground">
-              {previewUrl(formValues)}
+              {previewUrl(formValues, t)}
             </p>
           </div>
 
@@ -158,10 +160,10 @@ export function ProxyDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            取消
+            {t('common.cancel')}
           </Button>
           <Button onClick={onSave} disabled={saving}>
-            {saving ? '保存中...' : editing ? '保存' : '保存代理'}
+            {saving ? t('common.saving') : editing ? t('common.save') : t('proxyDialog.saveProxy')}
           </Button>
         </DialogFooter>
       </DialogContent>

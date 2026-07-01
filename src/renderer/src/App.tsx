@@ -12,6 +12,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { Toaster } from '@/components/ui/sonner'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useProxies } from '@/hooks/use-proxies'
+import { useI18n } from '@/i18n'
 
 interface WorkspacePaths {
   workspaceDirectory: string
@@ -20,6 +21,7 @@ interface WorkspacePaths {
 }
 
 export default function App() {
+  const { t } = useI18n()
   const [activePage, setActivePage] = useState<PageKey>('profiles')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [kernelInstalled, setKernelInstalled] = useState(false)
@@ -88,15 +90,15 @@ export default function App() {
         />
         <SidebarInset className="w-0 min-w-0 max-w-full bg-white">
           <SiteHeader
-            title={pageTitle(activePage)}
+            title={pageTitle(activePage, t)}
             subtitle={
               isKernelsPage
-                ? '按版本查看 CloakBrowser 免费版预编译内核及各系统下载。'
+                ? t('header.kernelsSubtitle')
                 : activePage === 'proxy'
-                  ? '集中管理本地代理，并在创建环境时快速复用。'
-                : activePage === 'settings'
-                  ? '查看应用实际使用的本地存储目录。'
-                : undefined
+                  ? t('header.proxySubtitle')
+                  : activePage === 'settings'
+                    ? t('header.settingsSubtitle')
+                    : undefined
             }
             action={
               isKernelsPage ? (
@@ -112,7 +114,7 @@ export default function App() {
                   }
                 >
                   <ExternalLink className="size-4" />
-                  查看 GitHub Releases
+                  {t('common.viewReleases')}
                 </Button>
               ) : undefined
             }

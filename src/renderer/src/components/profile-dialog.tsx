@@ -19,6 +19,7 @@ import {
   SelectValue
 } from '@/components/ui/select'
 import type { BrowserProfile, ProfileInput, SavedProxy } from '@/types'
+import { useI18n } from '@/i18n'
 
 interface ProfileDialogProps {
   open: boolean
@@ -62,6 +63,7 @@ export function ProfileDialog({
   savedProxies,
   onSave
 }: ProfileDialogProps) {
+  const { t } = useI18n()
   const [proxyChoice, setProxyChoice] = useState('none')
   const update = (patch: Partial<ProfileInput>) =>
     onFormChange({ ...formValues, ...patch })
@@ -76,7 +78,7 @@ export function ProfileDialog({
     }
     const savedProxy = savedProxies.find((proxy) => proxy.url === formValues.proxy)
     setProxyChoice(savedProxy?.id ?? 'custom')
-  }, [open, editing?.id, savedProxies])
+  }, [open, editing?.id, savedProxies, formValues.proxy])
 
   const changeProxyChoice = (value: string) => {
     setProxyChoice(value)
@@ -98,20 +100,20 @@ export function ProfileDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="grid max-h-[calc(100vh-2rem)] max-w-[720px] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>{editing ? '编辑环境' : '创建环境'}</DialogTitle>
+          <DialogTitle>{editing ? t('profileDialog.editTitle') : t('profileDialog.createTitle')}</DialogTitle>
         </DialogHeader>
 
         <div className="-mr-2 min-h-0 overflow-y-auto pr-2">
           <div className="grid grid-cols-2 gap-4 pt-2">
-            <Field label="环境名称" className="col-span-1">
+            <Field label={t('profileDialog.name')} className="col-span-1">
               <Input
-                placeholder="例如：工作环境"
+                placeholder={t('profileDialog.namePlaceholder')}
                 value={formValues.name ?? ''}
                 onChange={(e) => update({ name: e.target.value })}
               />
               {nameError && <p className="text-sm text-destructive">{nameError}</p>}
             </Field>
-            <Field label="启动网址" className="col-span-1">
+            <Field label={t('profileDialog.startUrl')} className="col-span-1">
               <Input
                 placeholder="https://example.com"
                 value={formValues.startUrl ?? ''}
@@ -119,7 +121,7 @@ export function ProfileDialog({
               />
             </Field>
 
-            <Field label="浏览器版本" className="col-span-2">
+            <Field label={t('profileDialog.browserVersion')} className="col-span-2">
               <Select
                 value={formValues.browserVersion || undefined}
                 onValueChange={(value) => update({ browserVersion: value })}
@@ -129,8 +131,8 @@ export function ProfileDialog({
                   <SelectValue
                     placeholder={
                       installedBrowserVersions.length
-                        ? '请选择浏览器版本'
-                        : '未下载任何浏览器内核'
+                        ? t('profileDialog.selectBrowserVersion')
+                        : t('profileDialog.noKernel')
                     }
                   />
                 </SelectTrigger>
@@ -144,24 +146,24 @@ export function ProfileDialog({
               </Select>
               <p className="text-xs text-muted-foreground">
                 {installedBrowserVersions.length
-                  ? '仅显示已下载到本机的浏览器内核版本'
-                  : '请先前往内核下载页面下载当前系统可用版本'}
+                  ? t('profileDialog.browserVersionHint')
+                  : t('profileDialog.noKernelHint')}
               </p>
             </Field>
 
-            <Field label="代理" className="col-span-2">
+            <Field label={t('profileDialog.proxy')} className="col-span-2">
               <Select value={proxyChoice} onValueChange={changeProxyChoice}>
                 <SelectTrigger className="h-10 w-full">
-                  <SelectValue placeholder="请选择代理" />
+                  <SelectValue placeholder={t('profileDialog.selectProxy')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">不使用代理</SelectItem>
+                  <SelectItem value="none">{t('profileDialog.noProxy')}</SelectItem>
                   {savedProxies.map((proxy) => (
                     <SelectItem key={proxy.id} value={proxy.id}>
                       {proxy.name} · {proxy.protocol}://{proxy.host}:{proxy.port}
                     </SelectItem>
                   ))}
-                  <SelectItem value="custom">自定义代理 URL</SelectItem>
+                  <SelectItem value="custom">{t('profileDialog.customProxy')}</SelectItem>
                 </SelectContent>
               </Select>
               {proxyChoice === 'custom' && (
@@ -172,76 +174,76 @@ export function ProfileDialog({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                可选择代理页中已保存的代理，也可以直接填写完整 URL
+                {t('profileDialog.proxyHint')}
               </p>
             </Field>
 
-          <Field label="时区" className="col-span-1">
-            <Input
-              placeholder="Asia/Shanghai"
-              value={formValues.timezone ?? ''}
-              onChange={(e) => update({ timezone: e.target.value })}
-            />
-          </Field>
-          <Field label="语言" className="col-span-1">
-            <Input
-              placeholder="zh-CN"
-              value={formValues.locale ?? ''}
-              onChange={(e) => update({ locale: e.target.value })}
-            />
-          </Field>
+            <Field label={t('profileDialog.timezone')} className="col-span-1">
+              <Input
+                placeholder="Asia/Shanghai"
+                value={formValues.timezone ?? ''}
+                onChange={(e) => update({ timezone: e.target.value })}
+              />
+            </Field>
+            <Field label={t('profileDialog.locale')} className="col-span-1">
+              <Input
+                placeholder="zh-CN"
+                value={formValues.locale ?? ''}
+                onChange={(e) => update({ locale: e.target.value })}
+              />
+            </Field>
 
-          <Field label="屏幕宽度" className="col-span-1">
-            <Input
-              type="number"
-              value={numValue(formValues.screenWidth)}
-              onChange={(e) =>
-                update({ screenWidth: e.target.value === '' ? undefined : Number(e.target.value) })
-              }
-            />
-          </Field>
-          <Field label="屏幕高度" className="col-span-1">
-            <Input
-              type="number"
-              value={numValue(formValues.screenHeight)}
-              onChange={(e) =>
-                update({ screenHeight: e.target.value === '' ? undefined : Number(e.target.value) })
-              }
-            />
-          </Field>
+            <Field label={t('profileDialog.screenWidth')} className="col-span-1">
+              <Input
+                type="number"
+                value={numValue(formValues.screenWidth)}
+                onChange={(e) =>
+                  update({ screenWidth: e.target.value === '' ? undefined : Number(e.target.value) })
+                }
+              />
+            </Field>
+            <Field label={t('profileDialog.screenHeight')} className="col-span-1">
+              <Input
+                type="number"
+                value={numValue(formValues.screenHeight)}
+                onChange={(e) =>
+                  update({ screenHeight: e.target.value === '' ? undefined : Number(e.target.value) })
+                }
+              />
+            </Field>
 
-          <Field label="CPU 线程" className="col-span-1">
-            <Input
-              type="number"
-              value={numValue(formValues.hardwareConcurrency)}
-              onChange={(e) =>
-                update({
-                  hardwareConcurrency: e.target.value === '' ? undefined : Number(e.target.value)
-                })
-              }
-            />
-          </Field>
-          <Field label="设备内存（GB）" className="col-span-1">
-            <Input
-              type="number"
-              value={numValue(formValues.deviceMemory)}
-              onChange={(e) =>
-                update({ deviceMemory: e.target.value === '' ? undefined : Number(e.target.value) })
-              }
-            />
-          </Field>
+            <Field label={t('profileDialog.cpu')} className="col-span-1">
+              <Input
+                type="number"
+                value={numValue(formValues.hardwareConcurrency)}
+                onChange={(e) =>
+                  update({
+                    hardwareConcurrency: e.target.value === '' ? undefined : Number(e.target.value)
+                  })
+                }
+              />
+            </Field>
+            <Field label={t('profileDialog.memory')} className="col-span-1">
+              <Input
+                type="number"
+                value={numValue(formValues.deviceMemory)}
+                onChange={(e) =>
+                  update({ deviceMemory: e.target.value === '' ? undefined : Number(e.target.value) })
+                }
+              />
+            </Field>
 
-          <Field label="存储配额（MB）" className="col-span-2">
-            <Input
-              type="number"
-              value={numValue(formValues.storageQuotaMb)}
-              onChange={(e) =>
-                update({
-                  storageQuotaMb: e.target.value === '' ? undefined : Number(e.target.value)
-                })
-              }
-            />
-          </Field>
+            <Field label={t('profileDialog.storage')} className="col-span-2">
+              <Input
+                type="number"
+                value={numValue(formValues.storageQuotaMb)}
+                onChange={(e) =>
+                  update({
+                    storageQuotaMb: e.target.value === '' ? undefined : Number(e.target.value)
+                  })
+                }
+              />
+            </Field>
 
             <div className="col-span-2 flex items-center gap-2.5 rounded-xl border bg-muted/40 p-3.5">
               <Checkbox
@@ -250,23 +252,23 @@ export function ProfileDialog({
                 onCheckedChange={(v) => update({ geoip: !!v })}
               />
               <Label htmlFor="geoip" className="cursor-pointer text-sm">
-                根据代理自动匹配时区和语言
+                {t('profileDialog.geoip')}
               </Label>
               <ShieldCheck className="size-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">同时减少 WebRTC IP 泄露风险</span>
+              <span className="text-sm text-muted-foreground">{t('profileDialog.geoipHint')}</span>
             </div>
           </div>
         </div>
 
         <DialogFooter className="border-t bg-background pt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            取消
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={onSave}
             disabled={saving || installedBrowserVersions.length === 0}
           >
-            {saving ? '保存中...' : editing ? '保存' : '创建'}
+            {saving ? t('common.saving') : editing ? t('common.save') : t('common.create')}
           </Button>
         </DialogFooter>
       </DialogContent>

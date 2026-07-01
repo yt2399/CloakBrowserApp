@@ -26,6 +26,7 @@ import {
 import { formatTime } from '@/hooks/use-profiles'
 import type { ProxiesStore } from '@/hooks/use-proxies'
 import type { SavedProxy } from '@/types'
+import { useI18n } from '@/i18n'
 
 function maskedUrl(proxy: SavedProxy): string {
   const host = proxy.host.includes(':') ? `[${proxy.host}]` : proxy.host
@@ -36,6 +37,7 @@ function maskedUrl(proxy: SavedProxy): string {
 }
 
 export function ProxyPage({ store }: { store: ProxiesStore }) {
+  const { t, language } = useI18n()
   const {
     filteredProxies,
     loading,
@@ -59,9 +61,9 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
   const copyUrl = async (proxy: SavedProxy) => {
     try {
       await navigator.clipboard.writeText(proxy.url)
-      toast.success('代理 URL 已复制')
+      toast.success(t('toast.proxyCopied'))
     } catch {
-      toast.error('复制失败，请稍后重试')
+      toast.error(t('toast.copyFailed'))
     }
   }
 
@@ -69,16 +71,16 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
     <div className="flex w-full min-w-0 flex-col gap-3">
       <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-5">
         <div>
-          <h3 className="text-base font-semibold">代理列表</h3>
+          <h3 className="text-base font-semibold">{t('proxy.title')}</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            保存常用代理，并在创建浏览器环境时直接选择。
+            {t('proxy.subtitle')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-[300px] max-w-full">
             <Search className="absolute left-3 top-1/2 size-[17px] -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="搜索名称、主机或账号"
+              placeholder={t('proxy.searchPlaceholder')}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               className="h-[42px] pl-9"
@@ -86,7 +88,7 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
           </div>
           <Button className="h-[42px]" onClick={openCreate}>
             <Plus className="size-[18px]" />
-            新增代理
+            {t('proxy.create')}
           </Button>
         </div>
       </section>
@@ -96,25 +98,25 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
           <TableHeader>
             <TableRow>
               <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">
-                名称
+                {t('table.name')}
               </TableHead>
               <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">
-                协议
+                {t('proxy.protocol')}
               </TableHead>
               <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">
-                主机与端口
+                {t('proxy.hostPort')}
               </TableHead>
               <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">
-                账号
+                {t('proxy.account')}
               </TableHead>
               <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">
-                代理 URL
+                {t('proxy.url')}
               </TableHead>
               <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">
-                创建时间
+                {t('proxy.createdAt')}
               </TableHead>
               <TableHead className="h-[50px] w-[100px] px-4 text-right text-[13px] font-semibold text-[#344054]">
-                操作
+                {t('table.actions')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -137,10 +139,10 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
                       <Globe2 className="size-5" />
                     </div>
                     <p className="font-medium text-foreground">
-                      {query ? '没有匹配的代理' : '还没有保存代理'}
+                      {query ? t('proxy.emptySearchTitle') : t('proxy.emptyTitle')}
                     </p>
                     <p className="text-sm">
-                      {query ? '换个关键词试试' : '新增后即可在创建环境时快速选择'}
+                      {query ? t('proxy.emptySearchDesc') : t('proxy.emptyDesc')}
                     </p>
                   </div>
                 </TableCell>
@@ -158,21 +160,21 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
                     {proxy.host}:{proxy.port}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-sm text-muted-foreground">
-                    {proxy.username || '无需认证'}
+                    {proxy.username || t('common.noAuth')}
                   </TableCell>
                   <TableCell className="max-w-[320px] px-4 py-3">
                     <button
                       type="button"
                       onClick={() => copyUrl(proxy)}
                       className="group flex max-w-full cursor-pointer items-center gap-2 text-left"
-                      title="点击复制完整代理 URL"
+                      title={t('proxy.copyTitle')}
                     >
                       <span className="truncate font-mono text-xs">{maskedUrl(proxy)}</span>
                       <Copy className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                     </button>
                   </TableCell>
                   <TableCell className="px-4 py-3 text-xs text-muted-foreground">
-                    {formatTime(proxy.createdAt)}
+                    {formatTime(proxy.createdAt, language)}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     <div className="flex justify-end gap-1">
@@ -180,7 +182,7 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
                         variant="ghost"
                         size="icon-sm"
                         className="text-muted-foreground hover:text-foreground"
-                        aria-label={`编辑代理 ${proxy.name}`}
+                        aria-label={t('proxy.editAria', { name: proxy.name })}
                         onClick={() => openEdit(proxy)}
                       >
                         <Pencil className="size-4" />
@@ -189,7 +191,7 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
                         variant="ghost"
                         size="icon-sm"
                         className="text-muted-foreground hover:text-destructive"
-                        aria-label={`删除代理 ${proxy.name}`}
+                        aria-label={t('proxy.deleteAria', { name: proxy.name })}
                         onClick={() => setDeleteTarget(proxy)}
                       >
                         <Trash2 className="size-4" />
@@ -222,13 +224,13 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除代理</AlertDialogTitle>
+            <AlertDialogTitle>{t('proxy.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定删除「{deleteTarget?.name}」吗？已经使用该 URL 的浏览器环境不会被修改。
+              {t('proxy.deleteDesc', { name: deleteTarget?.name ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={(event) => {
@@ -236,7 +238,7 @@ export function ProxyPage({ store }: { store: ProxiesStore }) {
                 confirmDelete()
               }}
             >
-              删除
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

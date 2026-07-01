@@ -16,6 +16,7 @@ import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useI18n, type Language } from '@/i18n'
 
 type KernelPlatform = 'windows' | 'linux' | 'mac'
 
@@ -81,9 +82,9 @@ function formatFileSize(size: number): string {
   return `${megabytes >= 100 ? megabytes.toFixed(0) : megabytes.toFixed(1)} MB`
 }
 
-function formatPublishedDate(value: string | null): string {
+function formatPublishedDate(value: string | null, language: Language): string {
   if (!value) return ''
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat(language, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'
@@ -112,6 +113,7 @@ function LoadingCards() {
 }
 
 export function KernelsPage() {
+  const { t, language } = useI18n()
   const [releaseData, setReleaseData] = useState<KernelReleaseResult | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -132,13 +134,13 @@ export function KernelsPage() {
       setReleaseData(result)
     } catch (requestError) {
       const message =
-        requestError instanceof Error ? requestError.message : '暂时无法获取 GitHub Releases'
+        requestError instanceof Error ? requestError.message : t('kernels.fetchError')
       setError(message)
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [])
+  }, [t])
 
   const refreshInstalledVersions = useCallback(async () => {
     try {
@@ -190,9 +192,9 @@ export function KernelsPage() {
   const copyUrl = async (url: string) => {
     try {
       await navigator.clipboard.writeText(url)
-      toast.success('下载地址已复制')
+      toast.success(t('kernels.copySuccess'))
     } catch {
-      toast.error('复制失败，请手动打开链接')
+      toast.error(t('kernels.copyError'))
     }
   }
 
@@ -200,7 +202,7 @@ export function KernelsPage() {
     try {
       await window.kernelReleases.revealVersion({ version, edition })
     } catch (openError) {
-      toast.error(openError instanceof Error ? openError.message : '打开内核目录失败')
+      toast.error(openError instanceof Error ? openError.message : t('kernels.openDirectoryError'))
     }
   }
 
@@ -214,10 +216,10 @@ export function KernelsPage() {
       await window.kernelReleases.download({ version, edition })
       await refreshInstalledVersions()
       window.dispatchEvent(new Event('kernel-installation-changed'))
-      toast.success(`内核 ${version} 已下载并解压到工作目录`)
+      toast.success(t('kernels.downloadSuccess', { version }))
     } catch (downloadError) {
       toast.error(
-        downloadError instanceof Error ? downloadError.message : `内核 ${version} 下载失败`
+        downloadError instanceof Error ? downloadError.message : t('kernels.downloadError', { version })
       )
     } finally {
       setDownloadProgress((current) => {
@@ -229,11 +231,13 @@ export function KernelsPage() {
   }
 
   const progressLabel = (progress: KernelDownloadProgress): string => {
-    if (progress.phase === 'verifying') return '正在校验'
-    if (progress.phase === 'extracting') return '正在解压'
-    if (progress.phase === 'completed') return '处理完成'
-    if (progress.phase === 'failed') return '下载失败'
-    return progress.percent === null ? '正在下载' : `正在下载 ${progress.percent}%`
+    if (progress.phase === 'verifying') return t('kernels.verifying')
+    if (progress.phase === 'extracting') return t('kernels.extracting')
+    if (progress.phase === 'completed') return t('kernels.completed')
+    if (progress.phase === 'failed') return t('kernels.failed')
+    return progress.percent === null
+      ? t('kernels.downloading')
+      : t('kernels.downloadingPercent', { percent: progress.percent })
   }
 
   if (loading) return <LoadingCards />
@@ -242,14 +246,14 @@ export function KernelsPage() {
     return (
       <div className="flex min-h-[360px] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 text-center">
         <Github className="size-10 text-muted-foreground" />
-        <h2 className="mt-4 text-base font-semibold">Release 列表加载失败</h2>
+        <h2 className="mt-4 text-base font-semibold">{t('kernels.loadFailedTitle')}</h2>
         <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-          {error}。请检查网络连接后重试，或前往 GitHub Releases 直接下载。
+          {t('kernels.loadFailedDesc', { error })}
         </p>
         <div className="mt-5 flex gap-2">
           <Button onClick={() => loadReleases(true)}>
             <RefreshCw className="size-4" />
-            重新加载
+            {t('common.retry')}
           </Button>
           <Button
             variant="outline"
@@ -258,7 +262,7 @@ export function KernelsPage() {
             }
           >
             <ExternalLink className="size-4" />
-            打开 GitHub
+            {t('common.openGithub')}
           </Button>
         </div>
       </div>
@@ -268,18 +272,20 @@ export function KernelsPage() {
   if (!releaseData || visibleReleases.length === 0) {
     const systemName = releaseData
       ? platformLabels[releaseData.currentPlatform]
-      : '当前系统'
+      : t('kernels.currentSystem')
 
     return (
       <div className="flex min-h-[360px] flex-col items-center justify-center rounded-xl border border-dashed bg-muted/20 px-6 text-center">
         <Chrome className="size-10 text-muted-foreground" />
-        <h2 className="mt-4 text-base font-semibold">暂无 {systemName} 可用内核</h2>
+        <h2 className="mt-4 text-base font-semibold">
+          {t('kernels.noKernelTitle', { system: systemName })}
+        </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          GitHub Releases 中暂时没有匹配当前系统的预编译资源。
+          {t('kernels.noKernelDesc')}
         </p>
         <Button className="mt-5" variant="outline" onClick={() => loadReleases(true)}>
           <RefreshCw className="size-4" />
-          刷新列表
+          {t('common.refresh')}
         </Button>
       </div>
     )
@@ -289,7 +295,7 @@ export function KernelsPage() {
     <div className="max-w-[1220px]">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          仅显示可在当前 {platformLabels[releaseData.currentPlatform]} 系统下载的版本
+          {t('kernels.visibleHint', { system: platformLabels[releaseData.currentPlatform] })}
         </p>
         <Button
           variant="ghost"
@@ -305,7 +311,7 @@ export function KernelsPage() {
           ) : (
             <RefreshCw className="size-4" />
           )}
-          刷新
+          {t('common.refresh')}
         </Button>
       </div>
 
@@ -339,7 +345,7 @@ export function KernelsPage() {
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {release.prerelease && <Badge variant="outline">预发布</Badge>}
+                  {release.prerelease && <Badge variant="outline">{t('kernels.prerelease')}</Badge>}
                   <Badge
                     variant="secondary"
                     className={
@@ -348,13 +354,13 @@ export function KernelsPage() {
                         : 'bg-[#e9f8ef] text-[#079455]'
                     }
                   >
-                    {release.edition === 'pro' ? '专业版' : '免费版'}
+                    {release.edition === 'pro' ? t('kernels.pro') : t('kernels.basic')}
                   </Badge>
                 </div>
               </div>
 
               <div className="mt-4">
-                <p className="text-xs font-medium text-muted-foreground">版本说明</p>
+                <p className="text-xs font-medium text-muted-foreground">{t('kernels.releaseNotes')}</p>
                 <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
                   {release.description}
                 </p>
@@ -363,21 +369,21 @@ export function KernelsPage() {
               <div className="mt-5 flex items-start gap-8 border-y py-3">
                 {release.patchLabel && (
                   <div>
-                    <p className="text-xs text-muted-foreground">指纹补丁</p>
+                    <p className="text-xs text-muted-foreground">{t('kernels.patchLabel')}</p>
                     <p className="mt-1 text-sm font-semibold">{release.patchLabel}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-xs text-muted-foreground">当前系统构建</p>
+                  <p className="text-xs text-muted-foreground">{t('kernels.currentBuild')}</p>
                   <p className="mt-1 text-sm font-semibold">
                     {release.platforms.map((platform) => platform.name).join(' / ')}
                   </p>
                 </div>
                 {release.publishedAt && (
                   <div className="ml-auto text-right">
-                    <p className="text-xs text-muted-foreground">发布时间</p>
+                    <p className="text-xs text-muted-foreground">{t('kernels.publishedAt')}</p>
                     <p className="mt-1 text-sm font-medium">
-                      {formatPublishedDate(release.publishedAt)}
+                      {formatPublishedDate(release.publishedAt, language)}
                     </p>
                   </div>
                 )}
@@ -385,7 +391,7 @@ export function KernelsPage() {
             </div>
 
             <div className="border-t bg-muted/20 px-5 py-3.5">
-              <p className="mb-1 text-xs font-medium text-muted-foreground">系统下载</p>
+              <p className="mb-1 text-xs font-medium text-muted-foreground">{t('kernels.systemDownload')}</p>
               <div className="divide-y">
                 {release.platforms.map((platform) => {
                   const isInstalled = installedSet.has(release.version)
@@ -408,8 +414,8 @@ export function KernelsPage() {
                             className="truncate font-mono text-[11px] text-muted-foreground"
                             title={platform.archive}
                           >
-                           {platform.archive}
-                           {platform.size > 0 && ` · ${formatFileSize(platform.size)}`}
+                            {platform.archive}
+                            {platform.size > 0 && ` · ${formatFileSize(platform.size)}`}
                           </p>
                           {currentProgress && (
                             <div className="mt-1.5 w-48">
@@ -445,10 +451,10 @@ export function KernelsPage() {
                             size="sm"
                             className="h-8"
                             onClick={() => openInstalledDirectory(release.version, release.edition)}
-                            title={`已下载到 ${release.version} 内核目录`}
+                            title={t('kernels.installedTitle', { version: release.version })}
                           >
                             <FolderOpen className="size-3.5" />
-                            打开目录
+                            {t('kernels.openDirectory')}
                           </Button>
                         ) : (
                           <Button
@@ -462,13 +468,13 @@ export function KernelsPage() {
                             ) : (
                               <Download className="size-3.5" />
                             )}
-                            {currentProgress ? progressLabel(currentProgress) : '下载'}
+                            {currentProgress ? progressLabel(currentProgress) : t('kernels.download')}
                           </Button>
                         )}
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          title="复制下载地址"
+                          title={t('kernels.copyDownloadUrl')}
                           onClick={() => copyUrl(platform.downloadUrl)}
                         >
                           <Copy className="size-3.5" />
@@ -476,7 +482,7 @@ export function KernelsPage() {
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          title="查看 GitHub Release"
+                          title={t('kernels.viewGithubRelease')}
                           onClick={() => openExternalUrl(release.releaseUrl)}
                         >
                           <Github className="size-3.5" />

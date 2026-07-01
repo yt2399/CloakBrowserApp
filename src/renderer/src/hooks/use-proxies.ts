@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { proxyApi } from '@/request'
 import type { ProxyInput, SavedProxy } from '@/types'
+import { useI18n } from '@/i18n'
 
 const defaultForm: ProxyInput = {
   name: '',
@@ -13,6 +14,7 @@ const defaultForm: ProxyInput = {
 }
 
 export function useProxies() {
+  const { t } = useI18n()
   const [proxies, setProxies] = useState<SavedProxy[]>([])
   const [loading, setLoading] = useState(true)
   const [serviceOnline, setServiceOnline] = useState(true)
@@ -64,15 +66,15 @@ export function useProxies() {
 
   const save = async () => {
     if (!formValues.name.trim()) {
-      setFormError('请输入代理名称')
+      setFormError(t('toast.proxyNameRequired'))
       return
     }
     if (!formValues.host.trim()) {
-      setFormError('请输入代理主机')
+      setFormError(t('toast.proxyHostRequired'))
       return
     }
     if (!formValues.port) {
-      setFormError('请输入代理端口')
+      setFormError(t('toast.proxyPortRequired'))
       return
     }
 
@@ -82,11 +84,11 @@ export function useProxies() {
       if (editTarget) {
         const updated = await proxyApi.update(editTarget.id, formValues)
         setProxies((items) => items.map((item) => (item.id === editTarget.id ? updated : item)))
-        toast.success('代理已更新')
+        toast.success(t('toast.proxyUpdated'))
       } else {
         const created = await proxyApi.create(formValues)
         setProxies((items) => [created, ...items])
-        toast.success('代理已保存')
+        toast.success(t('toast.proxySaved'))
       }
       setEditTarget(null)
       setModalOpen(false)
@@ -96,8 +98,8 @@ export function useProxies() {
         serviceOnline
           ? error instanceof Error
             ? error.message
-            : '保存代理失败'
-          : '本地服务未连接，请在 Electron 应用中操作'
+            : t('toast.saveProxyFailed')
+          : t('toast.serviceOffline')
       )
     } finally {
       setSaving(false)
@@ -111,9 +113,9 @@ export function useProxies() {
     try {
       await proxyApi.remove(target.id)
       setProxies((items) => items.filter((item) => item.id !== target.id))
-      toast.success('代理已删除')
+      toast.success(t('toast.proxyDeleted'))
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '删除代理失败')
+      toast.error(error instanceof Error ? error.message : t('toast.deleteProxyFailed'))
     }
   }
 

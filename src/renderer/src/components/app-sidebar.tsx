@@ -1,12 +1,4 @@
-import {
-  AppWindow,
-  ArrowUpRight,
-  Chrome,
-
-  Globe2,
-
-  Settings
-} from 'lucide-react'
+import { AppWindow, ArrowUpRight, Chrome, Globe2, Settings } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -14,21 +6,27 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton
+  SidebarMenuButton,
+  SidebarMenuItem
 } from '@/components/ui/sidebar'
+import { useI18n, type Translate, type TranslationKey } from '@/i18n'
 
 export type PageKey = 'profiles' | 'proxy' | 'kernels' | 'settings'
 
-export const navigationItems: Array<{ key: PageKey; label: string; icon: React.ReactNode }> = [
-  { key: 'profiles', label: '环境', icon: <AppWindow className="size-[19px]" /> },
-  { key: 'proxy', label: '代理', icon: <Globe2 className="size-[19px]" /> },
-  { key: 'kernels', label: '内核下载', icon: <Chrome className="size-[19px]" /> },
-  { key: 'settings', label: '设置', icon: <Settings className="size-[19px]" /> }
+const navigationItems: Array<{
+  key: PageKey
+  labelKey: TranslationKey
+  icon: React.ReactNode
+}> = [
+  { key: 'profiles', labelKey: 'nav.profiles', icon: <AppWindow className="size-[19px]" /> },
+  { key: 'proxy', labelKey: 'nav.proxy', icon: <Globe2 className="size-[19px]" /> },
+  { key: 'kernels', labelKey: 'nav.kernels', icon: <Chrome className="size-[19px]" /> },
+  { key: 'settings', labelKey: 'nav.settings', icon: <Settings className="size-[19px]" /> }
 ]
 
-export function pageTitle(page: PageKey): string {
-  return navigationItems.find((item) => item.key === page)?.label ?? ''
+export function pageTitle(page: PageKey, t: Translate): string {
+  const item = navigationItems.find((entry) => entry.key === page)
+  return item ? t(item.labelKey) : ''
 }
 
 function openExternalUrl(url: string) {
@@ -44,6 +42,8 @@ export function AppSidebar({
   onNavigate: (page: PageKey) => void
   collapsed: boolean
 }) {
+  const { t } = useI18n()
+
   return (
     <Sidebar
       collapsible="none"
@@ -54,7 +54,7 @@ export function AppSidebar({
     >
       <SidebarContent>
         <SidebarGroup>
-          {!collapsed && <SidebarGroupLabel>导航</SidebarGroupLabel>}
+          {!collapsed && <SidebarGroupLabel>{t('nav.label')}</SidebarGroupLabel>}
           <SidebarMenu>
             {navigationItems.map((item) => (
               <SidebarMenuItem key={item.key}>
@@ -63,7 +63,7 @@ export function AppSidebar({
                   onClick={() => onNavigate(item.key)}
                 >
                   {item.icon}
-                  {!collapsed && <span>{item.label}</span>}
+                  {!collapsed && <span>{t(item.labelKey)}</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -84,12 +84,12 @@ export function AppSidebar({
                   FLUXBROWSER
                 </span>
               </div>
-              <p className="mt-3 text-sm font-semibold leading-5">体验功能更完整的正式版</p>
+              <p className="mt-3 text-sm font-semibold leading-5">{t('nav.professional.title')}</p>
               <p className="mt-1 text-xs leading-5 text-white/60">
-                探索专业的浏览器环境管理与服务
+                {t('nav.professional.desc')}
               </p>
               <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3 text-xs font-medium">
-                <span>访问 fluxbrowser.cn</span>
+                <span>{t('nav.professional.link')}</span>
                 <span className="inline-flex size-6 items-center justify-center rounded-full bg-white text-[#101114] transition-transform group-hover:translate-x-0.5">
                   <ArrowUpRight className="size-3.5" />
                 </span>

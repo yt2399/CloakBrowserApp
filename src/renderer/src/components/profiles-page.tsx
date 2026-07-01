@@ -1,4 +1,4 @@
-import { Filter, Play, Plus, Search, StopCircle, Trash2 } from 'lucide-react';
+import { Filter, Play, Plus, Search, StopCircle, Trash2 } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -7,29 +7,25 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ProfileDialog } from '@/components/profile-dialog';
-import { ProfilesTable } from '@/components/profiles-table';
-import type { ProfilesStore } from '@/hooks/use-profiles';
-import type { SavedProxy } from '@/types';
-
-const tabs: Array<{ key: 'all' | 'running' | 'stopped'; label: (n: number) => string }> = [
-  { key: 'all', label: (n) => `全部（${n}）` },
-  { key: 'running', label: (n) => `运行中（${n}）` },
-  { key: 'stopped', label: (n) => `已停止（${n}）` },
-];
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ProfileDialog } from '@/components/profile-dialog'
+import { ProfilesTable } from '@/components/profiles-table'
+import type { ProfilesStore } from '@/hooks/use-profiles'
+import type { SavedProxy } from '@/types'
+import { useI18n } from '@/i18n'
 
 export function ProfilesPage({
   store,
-  savedProxies,
+  savedProxies
 }: {
-  store: ProfilesStore;
-  savedProxies: SavedProxy[];
+  store: ProfilesStore
+  savedProxies: SavedProxy[]
 }) {
+  const { t } = useI18n()
   const {
     loading,
     pagedProfiles,
@@ -65,8 +61,14 @@ export function ProfilesPage({
     cancelBatchDelete,
     openProfile,
     closeProfile,
-    batchSetStatus,
-  } = store;
+    batchSetStatus
+  } = store
+
+  const tabs: Array<{ key: 'all' | 'running' | 'stopped'; label: string }> = [
+    { key: 'all', label: t('profiles.all', { count: counts.all }) },
+    { key: 'running', label: t('profiles.running', { count: counts.running }) },
+    { key: 'stopped', label: t('profiles.stopped', { count: counts.stopped }) }
+  ]
 
   return (
     <div className="flex w-full min-w-0 flex-col gap-3">
@@ -77,18 +79,15 @@ export function ProfilesPage({
               <div className="relative w-full max-w-[330px]">
                 <Search className="absolute left-3 top-1/2 size-[17px] -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="搜索环境名称或代理"
+                  placeholder={t('profiles.searchPlaceholder')}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="h-[42px] pl-9"
                 />
               </div>
-              <Button
-                variant="outline"
-                className="h-[42px]"
-              >
+              <Button variant="outline" className="h-[42px]">
                 <Filter className="size-4" />
-                筛选
+                {t('profiles.filter')}
               </Button>
             </div>
             <div className="flex items-center gap-9">
@@ -103,7 +102,7 @@ export function ProfilesPage({
                       : 'text-muted-foreground'
                   }`}
                 >
-                  {item.label(counts[item.key])}
+                  {item.label}
                 </button>
               ))}
             </div>
@@ -116,7 +115,7 @@ export function ProfilesPage({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-tz">全部时区</SelectItem>
+                  <SelectItem value="all-tz">{t('profiles.allTimezone')}</SelectItem>
                 </SelectContent>
               </Select>
               <Select defaultValue="all-status">
@@ -124,15 +123,12 @@ export function ProfilesPage({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-status">全部状态</SelectItem>
+                  <SelectItem value="all-status">{t('profiles.allStatus')}</SelectItem>
                 </SelectContent>
               </Select>
-              <Button
-                className="h-[42px]"
-                onClick={openCreate}
-              >
+              <Button className="h-[42px]" onClick={openCreate}>
                 <Plus className="size-[18px]" />
-                创建环境
+                {t('profiles.create')}
               </Button>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-3">
@@ -142,7 +138,7 @@ export function ProfilesPage({
                 onClick={() => batchSetStatus('running')}
               >
                 <Play className="size-4" />
-                批量启动
+                {t('profiles.batchStart')}
               </Button>
               <Button
                 variant="outline"
@@ -150,7 +146,7 @@ export function ProfilesPage({
                 onClick={() => batchSetStatus('stopped')}
               >
                 <StopCircle className="size-4" />
-                批量停止
+                {t('profiles.batchStop')}
               </Button>
               <Button
                 variant="outline"
@@ -159,7 +155,7 @@ export function ProfilesPage({
                 onClick={requestBatchDelete}
               >
                 <Trash2 className="size-4" />
-                批量删除
+                {t('profiles.batchDelete')}
               </Button>
             </div>
           </div>
@@ -198,26 +194,26 @@ export function ProfilesPage({
       <AlertDialog
         open={!!deleteTarget}
         onOpenChange={(open) => {
-          if (!open) cancelDelete();
+          if (!open) cancelDelete()
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>删除环境</AlertDialogTitle>
+            <AlertDialogTitle>{t('profiles.deleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定删除「{deleteTarget?.name}」吗？该环境的 Cookie、缓存和本地会话数据也会永久删除。
+              {t('profiles.deleteDesc', { name: deleteTarget?.name ?? '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={(e) => {
-                e.preventDefault();
-                confirmDelete();
+                e.preventDefault()
+                confirmDelete()
               }}
             >
-              删除
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -226,30 +222,30 @@ export function ProfilesPage({
       <AlertDialog
         open={batchDeleteOpen}
         onOpenChange={(open) => {
-          if (!open) cancelBatchDelete();
+          if (!open) cancelBatchDelete()
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>批量删除环境</AlertDialogTitle>
+            <AlertDialogTitle>{t('profiles.batchDeleteTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              确定删除选中的 {selectedKeys.length} 个环境吗？对应的 Cookie、缓存和本地会话数据也会永久删除。
+              {t('profiles.batchDeleteDesc', { count: selectedKeys.length })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={(event) => {
-                event.preventDefault();
-                confirmBatchDelete();
+                event.preventDefault()
+                confirmBatchDelete()
               }}
             >
-              删除 {selectedKeys.length} 个环境
+              {t('profiles.deleteCount', { count: selectedKeys.length })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

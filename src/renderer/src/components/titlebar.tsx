@@ -2,6 +2,7 @@ import { Maximize2, Minus, X } from 'lucide-react'
 import logoUrl from '@/assets/logo.png'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/i18n'
 
 export function Titlebar({
   kernelInstalled,
@@ -10,6 +11,8 @@ export function Titlebar({
   kernelInstalled: boolean
   onOpenKernels: () => void
 }) {
+  const { t } = useI18n()
+
   return (
     <header className="flex h-11 items-center justify-between border-b bg-background px-3 [-webkit-app-region:drag]">
       <div className="flex items-center gap-2">
@@ -32,7 +35,7 @@ export function Titlebar({
           type="button"
           onClick={onOpenKernels}
           className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [-webkit-app-region:no-drag]"
-          title="前往内核下载"
+          title={t('titlebar.openKernels')}
         >
           <span
             className={
@@ -41,7 +44,7 @@ export function Titlebar({
                 : 'size-2 rounded-full bg-[#98a2b3]'
             }
           />
-          {kernelInstalled ? '内核准备就绪' : '内核未安装'}
+          {kernelInstalled ? t('titlebar.kernelReady') : t('titlebar.kernelMissing')}
         </button>
         <div className="flex items-center [-webkit-app-region:no-drag]">
           <Button
