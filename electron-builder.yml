@@ -22,7 +22,7 @@ linux:
 publish:
   provider: github
   owner: yt2399
-  repo: CloakBrowserApp
+  repo: CloakBrowserDesktop
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
