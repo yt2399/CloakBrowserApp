@@ -55,10 +55,6 @@ jobs:
     timeout-minutes: 60
     env:
       ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
-      CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
-      WIN_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
-      WIN_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:
@@ -135,9 +131,11 @@ jobs:
 
       - name: Report Windows code signing mode
         if: matrix.platform == 'windows'
+        env:
+          WINDOWS_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
         shell: bash
         run: |
-          if [ -n "${WIN_CSC_LINK:-}" ] || [ -n "${CSC_LINK:-}" ]; then
+          if [ -n "${WINDOWS_CSC_LINK:-}" ]; then
             echo "Windows code signing certificate secret is configured."
           else
             echo "Windows code signing certificate secret is not configured; installer will be unsigned."
@@ -150,7 +148,17 @@ jobs:
 
       - name: Package application
         shell: bash
+        env:
+          WINDOWS_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          WINDOWS_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
         run: |
+          unset CSC_LINK CSC_KEY_PASSWORD WIN_CSC_LINK WIN_CSC_KEY_PASSWORD
+          if [ "${{ matrix.platform }}" = "windows" ] && [ -n "${WINDOWS_CSC_LINK:-}" ]; then
+            export CSC_LINK="${WINDOWS_CSC_LINK}"
+            export CSC_KEY_PASSWORD="${WINDOWS_CSC_KEY_PASSWORD:-}"
+            export WIN_CSC_LINK="${WINDOWS_CSC_LINK}"
+            export WIN_CSC_KEY_PASSWORD="${WINDOWS_CSC_KEY_PASSWORD:-}"
+          fi
           for attempt in 1 2 3; do
             npx electron-builder ${{ matrix.builder_args }} --publish never && exit 0
             if [ "$attempt" -eq 3 ]; then

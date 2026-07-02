@@ -1,6 +1,6 @@
 {
   "name": "cloakbrowserdesktop",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "基于 CloakBrowser 的本地浏览器环境管理桌面应用",
   "private": true,
   "main": "./out/main/index.cjs",

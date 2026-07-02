@@ -17,6 +17,7 @@ win:
   icon: build/icon.ico
 mac:
   icon: build/icon.icns
+  identity: null
   artifactName: ${name}-${version}-mac-${arch}.${ext}
 linux:
   icon: build/icon.png
