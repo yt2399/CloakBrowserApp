@@ -17,17 +17,22 @@ win:
   icon: build/icon.ico
 mac:
   icon: build/icon.png
+  artifactName: ${name}-${version}-mac-${arch}.${ext}
 linux:
   icon: build/icon.png
+  target:
+    - AppImage
+  category: Utility
+  artifactName: ${name}-${version}-linux-${arch}.${ext}
 publish:
   provider: github
   owner: yt2399
   repo: CloakBrowserDesktop
 nsis:
-  artifactName: ${name}-${version}-setup.${ext}
+  artifactName: ${name}-${version}-windows-${arch}-setup.${ext}
   oneClick: false
   allowToChangeInstallationDirectory: true
-  license: build/installer-license.txt
+  license: build/installer-license.rtf
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   installerIcon: build/icon.ico

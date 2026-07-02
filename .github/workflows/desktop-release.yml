@@ -48,17 +48,71 @@ jobs:
           test -s "${RELEASE_NOTES}"
           grep -q '^## ' "${RELEASE_NOTES}"
 
-  package-windows:
-    name: Package Windows x64
+  package:
+    name: Package ${{ matrix.label }}
     needs: validate-version
-    runs-on: windows-latest
-    timeout-minutes: 45
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     env:
       ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
       CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
       CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
       WIN_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
       WIN_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: Windows x64
+            os: windows-latest
+            platform: windows
+            arch: x64
+            builder_args: --win nsis --x64
+            artifact_name: cloakbrowser-desktop-windows-x64
+            artifact_path: |
+              dist/*.exe
+              dist/*.exe.blockmap
+              dist/latest.yml
+          - label: Linux x64
+            os: ubuntu-latest
+            platform: linux
+            arch: x64
+            builder_args: --linux AppImage --x64
+            artifact_name: cloakbrowser-desktop-linux-x64
+            artifact_path: |
+              dist/*.AppImage
+              dist/latest-linux-x64.yml
+          - label: Linux arm64
+            os: ubuntu-24.04-arm
+            platform: linux
+            arch: arm64
+            builder_args: --linux AppImage --arm64
+            artifact_name: cloakbrowser-desktop-linux-arm64
+            artifact_path: |
+              dist/*.AppImage
+              dist/latest-linux-arm64.yml
+          - label: macOS x64
+            os: macos-15-intel
+            platform: macos
+            arch: x64
+            builder_args: --mac dmg zip --x64
+            artifact_name: cloakbrowser-desktop-macos-x64
+            artifact_path: |
+              dist/*.dmg
+              dist/*.zip
+              dist/*.zip.blockmap
+              dist/latest-mac-x64.yml
+          - label: macOS arm64
+            os: macos-latest
+            platform: macos
+            arch: arm64
+            builder_args: --mac dmg zip --arm64
+            artifact_name: cloakbrowser-desktop-macos-arm64
+            artifact_path: |
+              dist/*.dmg
+              dist/*.zip
+              dist/*.zip.blockmap
+              dist/latest-mac-arm64.yml
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -80,6 +134,7 @@ jobs:
         run: npm run build
 
       - name: Report Windows code signing mode
+        if: matrix.platform == 'windows'
         shell: bash
         run: |
           if [ -n "${WIN_CSC_LINK:-}" ] || [ -n "${CSC_LINK:-}" ]; then
@@ -88,11 +143,16 @@ jobs:
             echo "Windows code signing certificate secret is not configured; installer will be unsigned."
           fi
 
+      - name: Disable macOS code signing when no certificate is configured
+        if: matrix.platform == 'macos'
+        shell: bash
+        run: echo "CSC_IDENTITY_AUTO_DISCOVERY=false" >> "$GITHUB_ENV"
+
       - name: Package application
         shell: bash
         run: |
           for attempt in 1 2 3; do
-            npx electron-builder --win nsis --x64 --publish never && exit 0
+            npx electron-builder ${{ matrix.builder_args }} --publish never && exit 0
             if [ "$attempt" -eq 3 ]; then
               exit 1
             fi
@@ -100,29 +160,33 @@ jobs:
             sleep 10
           done
 
+      - name: Rename architecture-specific update metadata
+        shell: bash
+        run: |
+          if [ "${{ matrix.platform }}" = "linux" ] && [ -f dist/latest-linux.yml ]; then
+            mv dist/latest-linux.yml "dist/latest-linux-${{ matrix.arch }}.yml"
+          fi
+          if [ "${{ matrix.platform }}" = "macos" ] && [ -f dist/latest-mac.yml ]; then
+            mv dist/latest-mac.yml "dist/latest-mac-${{ matrix.arch }}.yml"
+          fi
+
       - name: Attest installer provenance
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: |
-            dist/*.exe
-            dist/*.exe.blockmap
-            dist/latest.yml
+          subject-path: ${{ matrix.artifact_path }}
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v7
         with:
-          name: cloakbrowser-desktop-windows-x64
-          path: |
-            dist/*.exe
-            dist/*.exe.blockmap
-            dist/latest.yml
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
           if-no-files-found: error
           retention-days: 14
 
   github-release:
     name: Publish GitHub Release
     if: startsWith(github.ref, 'refs/tags/')
-    needs: package-windows
+    needs: package
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -134,8 +198,9 @@ jobs:
       - name: Download installer artifact
         uses: actions/download-artifact@v8
         with:
-          name: cloakbrowser-desktop-windows-x64
+          pattern: cloakbrowser-desktop-*
           path: release-assets
+          merge-multiple: false
 
       - name: Create GitHub release
         env:
@@ -143,7 +208,10 @@ jobs:
         shell: bash
         run: |
           RELEASE_NOTES="release-notes/${GITHUB_REF_NAME#v}.md"
-          gh release create "$GITHUB_REF_NAME" release-assets/* \
+          mapfile -t RELEASE_ASSETS < <(find release-assets -type f | sort)
+          printf 'Release assets:\n'
+          printf ' - %s\n' "${RELEASE_ASSETS[@]}"
+          gh release create "$GITHUB_REF_NAME" "${RELEASE_ASSETS[@]}" \
             --repo "$GITHUB_REPOSITORY" \
             --title "CloakBrowser Desktop ${GITHUB_REF_NAME#v}" \
             --notes-file "$RELEASE_NOTES"

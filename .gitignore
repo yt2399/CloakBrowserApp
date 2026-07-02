@@ -5,7 +5,7 @@ release/
 build/*
 !build/icon.png
 !build/icon.ico
-!build/installer-license.txt
+!build/installer-license.rtf
 *.tsbuildinfo
 prototype-screenshot*.png
 *.db
