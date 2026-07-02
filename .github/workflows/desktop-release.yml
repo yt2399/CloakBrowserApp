@@ -22,10 +22,10 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -47,10 +47,10 @@ jobs:
       ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -78,7 +78,7 @@ jobs:
           done
 
       - name: Attest installer provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/*.exe
@@ -86,7 +86,7 @@ jobs:
             dist/latest.yml
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cloakbrowser-desktop-windows-x64
           path: |
@@ -106,7 +106,7 @@ jobs:
       contents: write
     steps:
       - name: Download installer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: cloakbrowser-desktop-windows-x64
           path: release-assets
