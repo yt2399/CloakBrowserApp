@@ -12,7 +12,20 @@ It brings CloakBrowser launches, persistent profiles, fingerprint settings, and 
 
 > The project is designed for individuals and research scenarios that need long-lived, isolated browser environments backed by CloakBrowser.
 
-## Features
+## Overview
+
+| Feature | Description |
+|---------|-------------|
+| Environment Management | Create, edit, delete, batch start/stop, search and filter |
+| Environment Configuration | Proxy, timezone, language, screen size, CPU/memory, fingerprint seed |
+| Persistent Data | Cookies, LocalStorage, cache, session state survive across launches |
+| Kernel Management | Browse CloakBrowser builds by version with mirror-accelerated downloads |
+| Remote Debugging | Auto-allocate CDP port, provide WebSocket address |
+| API | Local HTTP API for script and third-party tool integration |
+| Proxy Management | Save常用 proxies, reuse when creating environments |
+| Multi-language | Chinese and English interface support |
+
+## Details
 
 ### Environment Management
 
