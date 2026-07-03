@@ -12,66 +12,47 @@ It brings CloakBrowser launches, persistent profiles, fingerprint settings, and 
 
 > The project is designed for individuals and research scenarios that need long-lived, isolated browser environments backed by CloakBrowser.
 
-## Environment Management
+## Features
 
-The environment list provides one place to inspect and control browser profiles, including runtime status, proxy configuration, and recent activity.
+### Environment Management
+
+Create, edit, delete, batch start/stop, search, and filter browser environments from a unified list.
 
 ![Environment management](./docs/images/environment-management.png)
 
-Available management actions include:
-
-- Create, edit, and remove browser environments
-- Launch or stop environments individually or in batches
-- Search and filter existing environments
-- Inspect the current runtime status
-- Keep separate browser data for every environment
-
-## Environment Configuration
+### Environment Configuration
 
 Each environment uses its own persistent user-data directory, allowing cookies, LocalStorage, cache, and session state to survive browser restarts.
 
 ![Environment editor](./docs/images/profile-editor.png)
 
-Environment settings include:
+Configurable options include: name, startup URL, proxy, timezone, language, screen size, CPU/memory, storage quota, fingerprint seed, etc.
 
-- Environment name and startup URL
-- HTTP or SOCKS5 proxy
-- Timezone and browser locale
-- Screen width and height
-- CPU threads and device memory
-- Browser storage quota
-- Automatic timezone and locale matching through the proxy
-- CloakBrowser fingerprint seed and launch arguments
+### Kernel Management
 
-When an environment is started, CloakBrowserDesktop creates the configured persistent browser context and launches a real browser window through CloakBrowser.
-
-## Kernel Management
-
-The kernel page groups available CloakBrowser builds by Chromium version and shows the operating systems supported by each build.
+Browse CloakBrowser builds organized by Chromium version with mirror-accelerated downloads. Supports Windows, Linux, and macOS.
 
 ![Kernel downloads](./docs/images/kernel-downloads.png)
 
-It provides:
+### Remote Debugging (CDP)
 
-- Windows, Linux, and macOS build information
-- Official download links
-- Download URL copying
-- GitHub fallback downloads
-- Version, fingerprint patch, and platform details
+Automatically allocates a remote debugging port when an environment starts, providing a WebSocket address for direct connection from automation scripts.
+
+### API
+
+Built-in local HTTP API (`http://127.0.0.1:6788`) for controlling environment creation, startup, shutdown, and management via scripts or third-party tools. See the in-app "API" page for details.
 
 ## Relationship to CloakBrowser
 
-CloakBrowser is a Chromium project with source-level fingerprint modifications and support for persistent profiles, proxies, timezone, locale, and browser fingerprint configuration.
-
 CloakBrowserDesktop does not modify the CloakBrowser kernel. It provides a visual management and launch layer around those capabilities:
 
-- CloakBrowser supplies the browser kernel, fingerprint capabilities, and browser runtime
-- CloakBrowserDesktop manages environments, profile settings, status, and launch controls
+- **CloakBrowser** — browser kernel, fingerprint capabilities, and runtime
+- **CloakBrowserDesktop** — environment configuration, profile management, status display, and launch controls
 
-See the [official CloakBrowser project](https://github.com/CloakHQ/CloakBrowser) for detailed browser capabilities, supported platforms, and kernel releases.
+See the [official CloakBrowser project](https://github.com/CloakHQ/CloakBrowser) for detailed capabilities, supported platforms, and kernel releases.
 
 ## License
 
 CloakBrowserDesktop is licensed under the [PolyForm Noncommercial License 1.0.0](./LICENSE).
 
-Personal study, research, testing, and other qualifying noncommercial uses are permitted. Commercial use requires separate authorization. CloakBrowser, Chromium, and other third-party components remain subject to their own licenses.
+Personal study, research, testing, and other qualifying noncommercial uses are permitted. Commercial use requires separate authorization.

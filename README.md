@@ -12,66 +12,47 @@ CloakBrowserDesktop 是一个基于 [CloakBrowser](https://github.com/CloakHQ/Cl
 
 > 本项目适合需要长期维护多个独立浏览器环境，同时希望直接使用 CloakBrowser 能力的个人用户和研究场景。
 
-## 环境管理
+## 功能特性
 
-通过统一列表查看和管理所有浏览器环境，包括运行状态、代理配置和最近打开时间。
+### 环境管理
+
+通过统一列表查看和管理所有浏览器环境，支持创建、编辑、删除、批量启动/停止，以及搜索筛选。
 
 ![环境管理](./docs/images/environment-management.png)
 
-支持的管理操作：
+### 环境配置
 
-- 创建、编辑和删除浏览器环境
-- 单独或批量启动、停止环境
-- 搜索并筛选已有环境
-- 查看环境当前运行状态
-- 为每个环境保存独立的浏览器数据
-
-## 环境配置
-
-每个环境使用独立的持久化用户数据目录，浏览器 Cookie、LocalStorage、缓存和会话状态可以在关闭后继续保留。
+每个环境使用独立的持久化用户数据目录，Cookie、LocalStorage、缓存和会话状态可在关闭后保留。
 
 ![环境配置](./docs/images/profile-editor.png)
 
-可配置内容包括：
+可配置项：名称、启动网址、代理、时区、语言、屏幕尺寸、CPU/内存、存储配额、指纹种子等。
 
-- 浏览器环境名称与启动网址
-- HTTP 或 SOCKS5 代理
-- 时区和浏览器语言
-- 屏幕宽度与高度
-- CPU 线程数与设备内存
-- 浏览器存储配额
-- 根据代理自动匹配时区和语言
-- CloakBrowser 指纹种子与启动参数
+### 内核管理
 
-启动环境时，CloakBrowserDesktop 会根据配置创建对应的持久化浏览器上下文，并使用 CloakBrowser 启动真实浏览器窗口。
-
-## 内核管理
-
-内核页面按 Chromium 子版本整理 CloakBrowser 可用构建，并展示每个版本支持的操作系统。
+按 Chromium 版本整理 CloakBrowser 可用构建，支持镜像加速下载，提供 Windows、Linux 和 macOS 构建信息。
 
 ![内核下载](./docs/images/kernel-downloads.png)
 
-目前提供：
+### 远程调试 (CDP)
 
-- Windows、Linux 和 macOS 构建信息
-- 官方下载入口
-- 下载地址复制
-- GitHub 备用下载
-- 版本、指纹补丁数量和支持平台展示
+启动环境后自动分配远程调试端口，提供 WebSocket 地址，可直接用于自动化脚本连接浏览器。
+
+### API 接口
+
+内置本地 HTTP API (`http://127.0.0.1:6788`)，支持通过脚本或第三方工具控制环境的创建、启动、停止和管理。详见应用内「API 接口」页面。
 
 ## 与 CloakBrowser 的关系
 
-CloakBrowser 是经过源码级指纹修改的 Chromium 浏览器项目，提供持久化 Profile、代理、时区、语言和浏览器指纹等启动能力。
-
 CloakBrowserDesktop 不修改 CloakBrowser 内核，而是在其能力之上提供可视化的环境管理和启动入口：
 
-- CloakBrowser 负责浏览器内核、指纹能力与浏览器运行
-- CloakBrowserDesktop 负责环境配置、Profile 管理、状态展示和启动控制
+- **CloakBrowser** — 浏览器内核、指纹能力与运行时
+- **CloakBrowserDesktop** — 环境配置、Profile 管理、状态展示和启动控制
 
-有关 CloakBrowser 的详细能力、支持平台和内核版本，请查看 [CloakBrowser 官方项目](https://github.com/CloakHQ/CloakBrowser)。
+详细能力、支持平台和内核版本请查看 [CloakBrowser 官方项目](https://github.com/CloakHQ/CloakBrowser)。
 
 ## 许可证
 
 本项目使用 [PolyForm Noncommercial License 1.0.0](./LICENSE)。
 
-允许符合许可条款的个人学习、研究、测试和其他非商业使用。未经单独授权，不允许将本项目用于商业用途。CloakBrowser、Chromium 和其他第三方组件分别遵循其各自许可证。
+允许个人学习、研究、测试和其他非商业使用。商业用途需单独授权。
