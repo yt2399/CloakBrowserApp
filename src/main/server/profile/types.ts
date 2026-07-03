@@ -40,4 +40,6 @@ export interface ProfileInput {
 
 export interface ProfileListItem extends BrowserProfile {
   status: ProfileStatus
+  remoteDebuggingPort: number | null
+  remoteDebuggingAddress: string | null
 }

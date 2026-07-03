@@ -1,22 +1,28 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Apple,
+  CheckCircle2,
   Chrome,
   Copy,
   Download,
   ExternalLink,
   FolderOpen,
   Github,
+  Globe2,
   LoaderCircle,
   Monitor,
   RefreshCw,
+  Save,
   Terminal
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useI18n, type Language } from '@/i18n'
+
+const DEFAULT_MIRROR_URL = 'https://v4.gh-proxy.org/'
 
 type KernelPlatform = 'windows' | 'linux' | 'mac'
 
@@ -122,6 +128,8 @@ export function KernelsPage() {
   const [downloadProgress, setDownloadProgress] = useState<
     Map<string, KernelDownloadProgress>
   >(new Map())
+  const [mirrorUrl, setMirrorUrl] = useState(DEFAULT_MIRROR_URL)
+  const [mirrorSaved, setMirrorSaved] = useState(false)
   const installedSet = useMemo(() => new Set(installedVersions), [installedVersions])
 
   const loadReleases = useCallback(async (force = false) => {
@@ -154,6 +162,11 @@ export function KernelsPage() {
   useEffect(() => {
     loadReleases()
     refreshInstalledVersions()
+
+    // 加载镜像地址设置
+    window.kernelReleases.getMirrorUrl().then((url) => {
+      if (url) setMirrorUrl(url)
+    })
   }, [loadReleases, refreshInstalledVersions])
 
   useEffect(() => {
@@ -204,6 +217,14 @@ export function KernelsPage() {
     } catch (openError) {
       toast.error(openError instanceof Error ? openError.message : t('kernels.openDirectoryError'))
     }
+  }
+
+  const saveMirrorUrl = async () => {
+    const trimmed = mirrorUrl.trim()
+    await window.kernelReleases.setMirrorUrl(trimmed)
+    setMirrorSaved(true)
+    setTimeout(() => setMirrorSaved(false), 2000)
+    toast.success(t('kernels.mirrorSaved'))
   }
 
   const downloadVersion = async (version: string, edition: 'free' | 'pro') => {
@@ -293,6 +314,40 @@ export function KernelsPage() {
 
   return (
     <div className="max-w-[1220px]">
+      <div className="mb-4 rounded-xl border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent">
+            <Globe2 className="size-5" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-semibold">{t('kernels.mirrorTitle')}</h3>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {t('kernels.mirrorDesc')}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <Input
+                value={mirrorUrl}
+                onChange={(e) => setMirrorUrl(e.target.value)}
+                placeholder={DEFAULT_MIRROR_URL}
+                className="h-8 flex-1 font-mono text-xs"
+              />
+              <Button
+                size="sm"
+                className="h-8"
+                onClick={saveMirrorUrl}
+              >
+                {mirrorSaved ? (
+                  <CheckCircle2 className="size-3.5" />
+                ) : (
+                  <Save className="size-3.5" />
+                )}
+                {t('common.save')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           {t('kernels.visibleHint', { system: platformLabels[releaseData.currentPlatform] })}

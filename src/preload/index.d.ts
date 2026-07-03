@@ -81,6 +81,8 @@ declare global {
       }>
       onDownloadProgress: (callback: (progress: KernelDownloadProgress) => void) => () => void
       revealVersion: (payload: { version: string; edition: 'free' | 'pro' }) => Promise<void>
+      getMirrorUrl: () => Promise<string>
+      setMirrorUrl: (url: string) => Promise<void>
     }
     workspace: {
       getPaths: () => Promise<WorkspacePaths>

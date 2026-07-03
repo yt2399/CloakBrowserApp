@@ -19,10 +19,15 @@ export function createProfileRouter(store: ProfileStore, sessions: SessionManage
   router.get(
     '/profiles',
     apiHandler(() =>
-      store.list().map((profile) => ({
-        ...profile,
-        status: sessions.getStatus(profile.id)
-      }))
+      store.list().map((profile) => {
+        const session = sessions.getSession(profile.id)
+        return {
+          ...profile,
+          status: sessions.getStatus(profile.id),
+          remoteDebuggingPort: session?.remoteDebuggingPort ?? null,
+          remoteDebuggingAddress: session?.remoteDebuggingAddress ?? null
+        }
+      })
     )
   )
 
@@ -67,9 +72,14 @@ export function createProfileRouter(store: ProfileStore, sessions: SessionManage
       const id = getProfileId(req.params.id)
       const profile = store.get(id)
       if (!profile) throw new Error('环境不存在')
-      await sessions.open(profile)
+      const session = await sessions.open(profile)
       store.touchOpened(profile.id)
-      return { id: profile.id, status: sessions.getStatus(profile.id) }
+      return {
+        id: profile.id,
+        status: session.status,
+        remoteDebuggingPort: session.remoteDebuggingPort,
+        remoteDebuggingAddress: session.remoteDebuggingAddress
+      }
     })
   )
 
