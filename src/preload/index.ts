@@ -50,7 +50,9 @@ contextBridge.exposeInMainWorld('kernelReleases', {
     return () => ipcRenderer.removeListener('kernels:download-progress', listener)
   },
   revealVersion: (payload: { version: string; edition: 'free' | 'pro' }) =>
-    ipcRenderer.invoke('kernels:reveal-version', payload) as Promise<void>
+    ipcRenderer.invoke('kernels:reveal-version', payload) as Promise<void>,
+  getMirrorUrl: () => ipcRenderer.invoke('kernels:get-mirror-url') as Promise<string>,
+  setMirrorUrl: (url: string) => ipcRenderer.invoke('kernels:set-mirror-url', url) as Promise<void>
 })
 
 interface WorkspacePaths {

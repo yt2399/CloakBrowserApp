@@ -1,4 +1,4 @@
-import { AppWindow, ArrowUpRight, Chrome, Globe2, Settings } from 'lucide-react'
+import { AppWindow, ArrowUpRight, Chrome, Globe2, Settings, Terminal } from 'lucide-react'
 import {
   Sidebar,
   SidebarContent,
@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useI18n, type Translate, type TranslationKey } from '@/i18n'
 
-export type PageKey = 'profiles' | 'proxy' | 'kernels' | 'settings'
+export type PageKey = 'profiles' | 'proxy' | 'kernels' | 'settings' | 'api'
 
 const navigationItems: Array<{
   key: PageKey
@@ -21,6 +21,7 @@ const navigationItems: Array<{
   { key: 'profiles', labelKey: 'nav.profiles', icon: <AppWindow className="size-[19px]" /> },
   { key: 'proxy', labelKey: 'nav.proxy', icon: <Globe2 className="size-[19px]" /> },
   { key: 'kernels', labelKey: 'nav.kernels', icon: <Chrome className="size-[19px]" /> },
+  { key: 'api', labelKey: 'nav.api', icon: <Terminal className="size-[19px]" /> },
   { key: 'settings', labelKey: 'nav.settings', icon: <Settings className="size-[19px]" /> }
 ]
 

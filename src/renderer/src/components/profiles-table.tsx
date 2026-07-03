@@ -3,11 +3,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Circle,
+  Copy,
   Edit3,
+  HelpCircle,
   MoreVertical,
   Play,
   Square
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +22,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   Table,
   TableBody,
@@ -104,6 +108,20 @@ export function ProfilesTable({
     }
   }
 
+  const copyRemoteDebuggingAddress = async (address: string | null) => {
+    if (!address) {
+      toast.warning(t('toast.remoteDebuggingUnavailable'))
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(address)
+      toast.success(t('toast.remoteDebuggingCopied'))
+    } catch {
+      toast.error(t('toast.copyFailed'))
+    }
+  }
+
   return (
     <div className="flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card">
       <Table className="min-w-[1080px]">
@@ -121,7 +139,7 @@ export function ProfilesTable({
             <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">{t('table.proxy')}</TableHead>
             <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">{t('table.timezoneLanguage')}</TableHead>
             <TableHead className="h-[50px] px-4 text-[13px] font-semibold text-[#344054]">{t('table.lastOpened')}</TableHead>
-            <TableHead className="sticky right-0 z-20 h-[50px] w-[132px] min-w-[132px] bg-card px-4 text-right text-[13px] font-semibold text-[#344054] shadow-[-8px_0_12px_-12px_rgba(16,24,40,0.35)]">
+            <TableHead className="sticky right-0 z-20 h-[50px] w-[168px] min-w-[168px] bg-card px-4 text-right text-[13px] font-semibold text-[#344054] shadow-[-8px_0_12px_-12px_rgba(16,24,40,0.35)]">
               {t('table.actions')}
             </TableHead>
           </TableRow>
@@ -210,15 +228,33 @@ export function ProfilesTable({
                   <TableCell className="sticky right-0 z-10 bg-card px-4 py-3 shadow-[-8px_0_12px_-12px_rgba(16,24,40,0.35)] transition-colors group-hover:bg-muted/50">
                     <div className="flex items-center justify-end gap-1">
                       {record.status === 'running' ? (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-8 rounded-lg"
-                          onClick={() => onClose(record.id)}
-                          title={t('table.stop')}
-                        >
-                          <Square className="size-3.5" />
-                        </Button>
+                        <>
+                          {record.remoteDebuggingAddress ? (
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="size-8 rounded-lg"
+                              onClick={() => copyRemoteDebuggingAddress(record.remoteDebuggingAddress)}
+                              title={t('table.copyRemoteDebuggingAddress', {
+                                address: record.remoteDebuggingAddress
+                              })}
+                              aria-label={t('table.copyRemoteDebuggingAddress', {
+                                address: record.remoteDebuggingAddress
+                              })}
+                            >
+                              <Copy className="size-3.5" />
+                            </Button>
+                          ) : null}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-8 rounded-lg"
+                            onClick={() => onClose(record.id)}
+                            title={t('table.stop')}
+                          >
+                            <Square className="size-3.5" />
+                          </Button>
+                        </>
                       ) : (
                         <Button
                           variant="outline"
@@ -252,6 +288,32 @@ export function ProfilesTable({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>{t('table.copyConfig')}</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              if (record.status !== 'running') {
+                                toast.warning(t('toast.profileNotRunning'))
+                                return
+                              }
+                              copyRemoteDebuggingAddress(record.remoteDebuggingAddress)
+                            }}
+                          >
+                            {t('table.copyCdpAddress')}
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span
+                                    className="ml-1 inline-flex cursor-help items-center"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <HelpCircle className="size-3.5 text-muted-foreground hover:text-foreground" />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {t('table.cdpTooltip')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             variant="destructive"
                             onSelect={() => onDelete(record)}

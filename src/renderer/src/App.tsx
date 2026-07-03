@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
+import { ApiPage } from '@/components/api-page'
 import { AppSidebar, type PageKey, pageTitle } from '@/components/app-sidebar'
 import { Button } from '@/components/ui/button'
 import { KernelsPage } from '@/components/kernels-page'
@@ -98,7 +99,9 @@ export default function App() {
                   ? t('header.proxySubtitle')
                   : activePage === 'settings'
                     ? t('header.settingsSubtitle')
-                    : undefined
+                    : activePage === 'api'
+                      ? t('api.subtitle')
+                      : undefined
             }
             action={
               isKernelsPage ? (
@@ -128,6 +131,7 @@ export default function App() {
               <SettingsPage paths={workspacePaths} onChange={handleWorkspaceChange} />
             )}
             {activePage === 'proxy' && <ProxyPage store={proxyStore} />}
+            {activePage === 'api' && <ApiPage />}
           </main>
         </SidebarInset>
       </SidebarProvider>

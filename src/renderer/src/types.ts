@@ -21,6 +21,8 @@ export interface BrowserProfile {
   updatedAt: number
   lastOpenedAt: number | null
   status: ProfileStatus
+  remoteDebuggingPort: number | null
+  remoteDebuggingAddress: string | null
 }
 
 export type ProfileInput = Partial<

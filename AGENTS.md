@@ -15,7 +15,9 @@ Electron desktop app for managing isolated browser environments powered by [Cloa
 | Typecheck node/main side | `npm run typecheck:node` |
 | Typecheck renderer side | `npm run typecheck:web` |
 
-There is no linter, formatter, or test suite configured. `npm run build` is the primary verification gate.
+There is no linter or formatter configured. `npm run build` is the primary verification gate.
+
+Tests use Node's built-in test runner with `--experimental-strip-types` to run `.test.mjs` files that import TypeScript directly (no compile step). CI runs `npm test` before `npm run build`.
 
 ## Architecture
 
@@ -73,6 +75,7 @@ Defined in both `tsconfig.node.json` and `tsconfig.web.json`:
 - `class-variance-authority` + `tailwind-merge` via `clsx` for className composition.
 - Window is frameless (`frame: false`) with custom titlebar component.
 - Profile IDs are generated strings; user data directories are `<profilesDirectory>/<id>/`.
+- i18n is inline in `src/renderer/src/i18n.tsx` with `zh-CN` and `en` dictionaries. Use `useI18n()` hook and `t('key')` for translations.
 
 ## Gotchas
 

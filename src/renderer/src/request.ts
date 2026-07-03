@@ -58,7 +58,12 @@ export const profileApi = {
     })
   },
   open(id: string) {
-    return request<{ id: string; status: string }>(`/profiles/${id}/open`, { method: 'POST' })
+    return request<{
+      id: string
+      status: string
+      remoteDebuggingPort: number
+      remoteDebuggingAddress: string
+    }>(`/profiles/${id}/open`, { method: 'POST' })
   },
   close(id: string) {
     return request<{ id: string; status: string }>(`/profiles/${id}/close`, { method: 'POST' })

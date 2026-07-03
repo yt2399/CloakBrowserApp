@@ -1,6 +1,17 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import type { IpcMainInvokeEvent } from 'electron'
-import { join } from 'node:path'
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+
+// 包装 fetch 添加 User-Agent 头，解决代理服务器连接问题
+const originalFetch = globalThis.fetch.bind(globalThis)
+globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+  const headers = new Headers(init?.headers)
+  if (!headers.has('User-Agent')) {
+    headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
+  }
+  return originalFetch(input, { ...init, headers })
+}) as typeof globalThis.fetch
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
 import {
   downloadKernel,
@@ -18,6 +29,49 @@ import {
 import { initializeAutoUpdater } from './auto-updater'
 
 let mainWindow: BrowserWindow | null = null
+
+// 镜像加速地址设置
+const MIRROR_SETTINGS_KEY = 'mirrorUrl'
+
+function getMirrorSettingsPath(): string {
+  return join(app.getPath('userData'), 'mirror-settings.json')
+}
+
+const DEFAULT_MIRROR_URL = 'https://v4.gh-proxy.org/'
+
+function loadMirrorUrl(): string {
+  const path = getMirrorSettingsPath()
+  try {
+    if (existsSync(path)) {
+      const raw = readFileSync(path, 'utf-8')
+      const parsed = JSON.parse(raw) as Record<string, string>
+      return parsed[MIRROR_SETTINGS_KEY] || ''
+    }
+  } catch {
+    // ignore
+  }
+  return ''
+}
+
+function saveMirrorUrl(url: string): void {
+  const path = getMirrorSettingsPath()
+  mkdirSync(dirname(path), { recursive: true })
+  writeFileSync(path, JSON.stringify({ [MIRROR_SETTINGS_KEY]: url }, null, 2), 'utf-8')
+  applyMirrorUrl(url)
+}
+
+function applyMirrorUrl(url: string): void {
+  if (url) {
+    // 镜像 URL 是前缀代理，需要拼接完整的 GitHub 下载路径
+    // 例如：https://v4.gh-proxy.org/ + https://github.com/.../releases/download/...
+    const baseUrl = url.endsWith('/') ? url : url + '/'
+    process.env.CLOAKBROWSER_DOWNLOAD_URL = baseUrl + 'https://github.com/CloakHQ/cloakbrowser/releases/download'
+    process.env.CLOAKBROWSER_SKIP_CHECKSUM = 'true'
+  } else {
+    delete process.env.CLOAKBROWSER_DOWNLOAD_URL
+    delete process.env.CLOAKBROWSER_SKIP_CHECKSUM
+  }
+}
 
 function getAppIconPath(): string {
   return app.isPackaged
@@ -140,8 +194,20 @@ ipcMain.handle('workspace:reveal-workspace', () => {
   return revealWorkspaceDirectory()
 })
 
+ipcMain.handle('kernels:get-mirror-url', () => {
+  return loadMirrorUrl() || DEFAULT_MIRROR_URL
+})
+
+ipcMain.handle('kernels:set-mirror-url', (_event, url: string) => {
+  saveMirrorUrl(url)
+})
+
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.cloakbrowser.app')
+
+  // 应用启动时加载镜像地址设置，未设置则使用默认地址
+  const savedMirrorUrl = loadMirrorUrl() || DEFAULT_MIRROR_URL
+  applyMirrorUrl(savedMirrorUrl)
 
   app.on('browser-window-created', (_, window) => {
     if (is.dev) {
